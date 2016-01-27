@@ -1,4 +1,4 @@
-Simple Twitch Notifications 0.1
+Simple Twitch Notifications 0.1.1
 
 I watch quite a few Twitch streams, however, I never get notifications when any of them are live.  I decided I wanted to create something for myself that is simple.
 
