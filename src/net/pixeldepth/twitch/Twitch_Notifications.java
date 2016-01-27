@@ -22,12 +22,12 @@ public class Twitch_Notifications {
 	public Logger logger = Logger.getLogger(this.getClass().getPackage().getName());
 
 	/**
-	 * Polling time.  Default is to check every 30 seconds
+	 * Polling time.  Default is to check every 60 seconds
 	 *
 	 * @property {Integer} interval
 	 */
 
-	public int interval = 30000;
+	public int interval = 60000;
 
 	/**
 	 * A system tray icon is created so that we can exit and refresh the list.
