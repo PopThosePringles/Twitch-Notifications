@@ -43,12 +43,9 @@ public class Task extends TimerTask {
 		this.twitch_notifications = twitch_notifications;
 
 		for(String streamer : this.twitch_notifications.stream_names){
+			this.twitch_notifications.logger.info("Adding (HashMap): " + streamer);
 			this.streams.put(streamer, false);
 		}
-
-		// We want to run instantly, then let the timer take over.
-
-		this.run();
 	}
 
 	/**
@@ -59,9 +56,18 @@ public class Task extends TimerTask {
 
 	@Override
 	public void run(){
+		this.twitch_notifications.logger.info("Running task");
+
 		for(String streamer : this.streams.keySet()){
 			if(!this.streams.get(streamer)){
-				this.streams.put(streamer, this.stream_is_live(streamer));
+				this.twitch_notifications.logger.info(streamer + " is not live");
+
+				boolean is_live = this.stream_is_live(streamer);
+
+				this.twitch_notifications.logger.info(streamer + " " + is_live);
+				this.streams.put(streamer, is_live);
+			} else {
+				this.twitch_notifications.logger.info(streamer + " has been set to live previously");
 			}
 		}
 	}
@@ -75,6 +81,8 @@ public class Task extends TimerTask {
 	 */
 
 	private boolean stream_is_live(String streamer){
+		this.twitch_notifications.logger.info("Checking if " + streamer + " is live");
+
 		try {
 			URL url = new URL("https://api.twitch.tv/kraken/streams/" + streamer);
 
@@ -94,6 +102,8 @@ public class Task extends TimerTask {
 			http_cnnection.disconnect();
 
 			if(sb.toString().length() > 0){
+				this.twitch_notifications.logger.info("We have JSON string: " + streamer);
+
 				try {
 					JSONParser parser = new JSONParser();
 					JSONObject json = (JSONObject) parser.parse(sb.toString());
@@ -104,15 +114,22 @@ public class Task extends TimerTask {
 
 						String msg = channel.get("display_name") + " is live and playing \"" + channel.get("game") + "\"";
 
+						this.twitch_notifications.logger.info("Showing display message for: " + streamer);
 						this.twitch_notifications.tray_icon.displayMessage("Stream Live", msg, TrayIcon.MessageType.INFO);
 
 						return true;
+					} else {
+						this.twitch_notifications.logger.info(streamer + " has JSON, but not live");
 					}
 				} catch(ParseException ex){
+					this.twitch_notifications.logger.warning("Could not parse JSON: " + streamer);
 					ex.printStackTrace();
 				}
+			} else {
+				this.twitch_notifications.logger.info("Noe JSON string: " + streamer);
 			}
 		} catch(IOException e){
+			this.twitch_notifications.logger.warning("Could not open URL: " + streamer);
 			e.printStackTrace();
 		}
 

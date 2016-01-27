@@ -12,8 +12,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.Timer;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Twitch_Notifications {
+
+	public Logger logger = Logger.getLogger(this.getClass().getPackage().getName());
 
 	/**
 	 * Polling time.  Default is to check every 30 seconds
@@ -78,6 +84,22 @@ public class Twitch_Notifications {
 	 */
 
 	public Twitch_Notifications(){
+		/*Handler handler = null;
+
+		try {
+			handler = new FileHandler("log.txt");
+		} catch(IOException e){
+			e.printStackTrace();
+		}
+
+		if(handler != null){
+			this.logger.addHandler(handler);
+
+			SimpleFormatter formatter = new SimpleFormatter();
+
+			handler.setFormatter(formatter);
+		}*/
+
 		this.create_system_tray_icon();
 
 		if(this.system_tray_created){
@@ -90,6 +112,8 @@ public class Twitch_Notifications {
 	 */
 
 	private void init(){
+		this.logger.info("init called");
+
 		this.load_stream_names();
 		this.run_task();
 	}
@@ -101,13 +125,15 @@ public class Twitch_Notifications {
 
 	private void run_task(){
 		if(this.timer != null){
+			this.logger.info("Cancelling timer");
 			this.timer.cancel();
 			this.timer.purge();
 		}
 
-		Task task = new Task(this);
+		this.logger.info("Creating task instance and timer (" + this.interval + ")");
+
 		this.timer = new Timer();
-		this.timer.schedule(task, this.interval);
+		this.timer.schedule(new Task(this), 0, this.interval);
 	}
 
 	/**
@@ -115,6 +141,7 @@ public class Twitch_Notifications {
 	 */
 
 	public void load_stream_names(){
+		this.logger.info("Load stream names...");
 		this.stream_names.clear();
 
 		BufferedReader reader = null;
@@ -127,15 +154,15 @@ public class Twitch_Notifications {
 			while((line = reader.readLine()) != null){
 				if(line.length() > 0){
 					this.stream_names.add(line);
+					this.logger.info("Adding: " + line);
 				}
 			}
 		} catch(IOException e){
+			this.logger.warning("Could not open streams.txt");
 			e.printStackTrace();
 		} finally {
 			try {
-
 				reader.close();
-
 			} catch(IOException e){
 				e.printStackTrace();
 			}
@@ -147,11 +174,17 @@ public class Twitch_Notifications {
 	 */
 
 	private void create_system_tray_icon(){
+		this.logger.info("About to try and create system tray icon");
+
 		if(SystemTray.isSupported()){
+			this.logger.info("SystemTray supported");
+
 			PopupMenu popup = new PopupMenu();
 			Image image = this.create_image("/resources/images/twitch.png", "Twitch Stream Notifications");
 
 			if(image != null){
+				this.logger.info("Image created");
+
 				this.tray_icon = new TrayIcon(image);
 				SystemTray tray = SystemTray.getSystemTray();
 
@@ -167,6 +200,8 @@ public class Twitch_Notifications {
 				try {
 					tray.add(this.tray_icon);
 				} catch(AWTException e){
+					this.logger.warning("Tray icon could not be added");
+
 					e.printStackTrace();
 					return;
 				}
@@ -177,6 +212,7 @@ public class Twitch_Notifications {
 
 					@Override
 					public void actionPerformed(ActionEvent e){
+						tn.logger.info("Exiting");
 						tray.remove(tn.tray_icon);
 						System.exit(0);
 					}
@@ -187,6 +223,7 @@ public class Twitch_Notifications {
 
 					@Override
 					public void actionPerformed(ActionEvent e){
+						tn.logger.info("Refreshing...");
 						tn.init();
 					}
 
@@ -194,6 +231,8 @@ public class Twitch_Notifications {
 
 				this.system_tray_created = true;
 			}
+		} else {
+			this.logger.warning("SystemTray not supported");
 		}
 	}
 
@@ -211,6 +250,8 @@ public class Twitch_Notifications {
 		if(image_url != null){
 			return (new ImageIcon(image_url, desc)).getImage();
 		}
+
+		this.logger.warning("Could not create image");
 
 		return null;
 	}
