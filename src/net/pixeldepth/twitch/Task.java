@@ -50,8 +50,6 @@ public class Task extends TimerTask {
 
 	/**
 	 * This is for the timer.
-	 * Notice we sleep.  Am not sure if Twitch has a rate limit for accessing the JSON,
-	 * but just in case, I added in a interval between each check.
 	 */
 
 	@Override
@@ -87,8 +85,8 @@ public class Task extends TimerTask {
 			URL url = new URL("https://api.twitch.tv/kraken/streams/" + streamer);
 
 			URLConnection connection = url.openConnection();
-			HttpURLConnection http_cnnection = (HttpURLConnection) connection;
-			InputStream is = http_cnnection.getInputStream();
+			HttpURLConnection http_connection = (HttpURLConnection) connection;
+			InputStream is = http_connection.getInputStream();
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is,"UTF8"),8);
 			String line = null;
@@ -99,7 +97,7 @@ public class Task extends TimerTask {
 			}
 
 			is.close();
-			http_cnnection.disconnect();
+			http_connection.disconnect();
 
 			if(sb.toString().length() > 0){
 				this.twitch_notifications.logger.info("We have JSON string: " + streamer);
